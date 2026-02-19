@@ -114,63 +114,6 @@ body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--t);min-he
 // API CONFIGURATION
 // ============================================
 const API_URL = 'https://beatdraft-api.onrender.com';
-let API_CACHE = {artists: null, charts_it: null, charts_global: null, lastFetch: null};
-
-// Fetch artisti dal backend
-async function fetchArtists() {
-  if (API_CACHE.artists && Date.now() - API_CACHE.lastFetch < 300000) return API_CACHE.artists;
-  try {
-    const response = await fetch(`${API_URL}/api/artists?limit=50`);
-    if (!response.ok) throw new Error('API Error');
-    const data = await response.json();
-    API_CACHE.artists = data.artists;
-    API_CACHE.lastFetch = Date.now();
-    return data.artists;
-  } catch (error) {
-    console.error('Failed to fetch artists:', error);
-    return null;
-  }
-}
-
-// Converti formato API
-function convertAPIArtist(artist) {
-  return {
-    cardId: `api-${artist.id}`,
-    artist: artist.name,
-    emoji: artist.emoji || '🎵',
-    spotifyId: artist.spotify_id,
-    monthlyListeners: artist.monthly_listeners || 0,
-    category: artist.category,
-    isLegacy: artist.is_legacy || false
-  };
-}
-
-// Carica dati reali
-async function loadRealData() {
-  console.log('🔄 Loading real data from API...');
-  try {
-    const apiArtists = await fetchArtists();
-    if (apiArtists && apiArtists.length > 0) {
-      CARDS = apiArtists.map(convertAPIArtist);
-      console.log(`✅ Loaded ${CARDS.length} artists from API`);
-    }
-  } catch (error) {
-    console.error('❌ Failed to load:', error);
-  }
-}
-
-// Auto-load
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', loadRealData);
-} else {
-  setTimeout(loadRealData, 100);
-}
-
-// ============================================
-  // ============================================
-// API CONFIGURATION
-// ============================================
-const API_URL = 'https://beatdraft-api.onrender.com';
 let API_CACHE = {
   artists: null,
   charts_it: null,
