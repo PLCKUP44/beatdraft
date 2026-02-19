@@ -110,6 +110,114 @@ body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--t);min-he
 <div id="mfriend" class="modal"></div>
 
 <script>
+  // ============================================
+// API CONFIGURATION
+// ============================================
+const API_URL = 'https://beatdraft-api.onrender.com';
+let API_CACHE = {
+  artists: null,
+  charts_it: null,
+  charts_global: null,
+  lastFetch: null
+};
+
+// ============================================
+// API FUNCTIONS  
+// ============================================
+
+// Fetch artisti dal backend
+async function fetchArtists() {
+  if (API_CACHE.artists && Date.now() - API_CACHE.lastFetch < 300000) {
+    return API_CACHE.artists; // Cache 5 minuti
+  }
+  
+  try {
+    const response = await fetch(`${API_URL}/api/artists?limit=50`);
+    if (!response.ok) throw new Error('API Error');
+    const data = await response.json();
+    API_CACHE.artists = data.artists;
+    API_CACHE.lastFetch = Date.now();
+    return data.artists;
+  } catch (error) {
+    console.error('Failed to fetch artists:', error);
+    return CARDS; // Fallback ai dati mock
+  }
+}
+
+// Fetch charts
+async function fetchCharts(region = 'it') {
+  const cacheKey = `charts_${region}`;
+  if (API_CACHE[cacheKey] && Date.now() - API_CACHE.lastFetch < 300000) {
+    return API_CACHE[cacheKey];
+  }
+  
+  try {
+    const response = await fetch(`${API_URL}/api/charts?region=${region}`);
+    if (!response.ok) throw new Error('API Error');
+    const data = await response.json();
+    API_CACHE[cacheKey] = data.charts;
+    return data.charts;
+  } catch (error) {
+    console.error('Failed to fetch charts:', error);
+    return region === 'it' ? CIT : CGL; // Fallback
+  }
+}
+
+// Converti formato API a formato frontend
+function convertAPIArtistToCard(artist) {
+  return {
+    cardId: `api-${artist.id}`,
+    artist: artist.name,
+    emoji: artist.emoji || '🎵',
+    spotifyId: artist.spotify_id,
+    monthlyListeners: artist.monthly_listeners || artist.current_listeners,
+    category: artist.category,
+    isLegacy: artist.is_legacy || false
+  };
+}
+
+// ============================================
+// LOAD REAL DATA ON INIT
+// ============================================
+async function loadRealData() {
+  console.log('🔄 Loading real data from API...');
+  
+  try {
+    // Load artists
+    const apiArtists = await fetchArtists();
+    if (apiArtists && apiArtists.length > 0) {
+      CARDS = apiArtists.map(convertAPIArtistToCard);
+      console.log(`✅ Loaded ${CARDS.length} artists from API`);
+    }
+    
+    // Load charts
+    const chartsIT = await fetchCharts('it');
+    const chartsGlobal = await fetchCharts('global');
+    
+    if (chartsIT && chartsIT.length > 0) {
+      CIT = chartsIT;
+      console.log(`✅ Loaded ${CIT.length} Italian charts`);
+    }
+    
+    if (chartsGlobal && chartsGlobal.length > 0) {
+      CGL = chartsGlobal;
+      console.log(`✅ Loaded ${CGL.length} Global charts`);
+    }
+    
+    // Re-render if on relevant page
+    if (S.page === 'market' || S.page === 'charts') {
+      render();
+    }
+    
+  } catch (error) {
+    console.error('❌ Failed to load real data:', error);
+    console.log('📦 Using mock data as fallback');
+  }
+}
+
+// ============================================
+// AUTO-LOAD ON PAGE READY
+// ============================================
 // ── CONFIGURAZIONE ──────────────────────────────────────────────────────────
 var RC = {Leggendario:"#D4AF37",Mondiale:"#F59E0B",Grande:"#3B82F6",Emergente:"#10B981",Sconosciuto:"#64748B"};
 var RI = {Leggendario:"👑",Mondiale:"🌍",Grande:"⭐",Emergente:"🚀",Sconosciuto:"💎"};
@@ -1163,6 +1271,11 @@ function render(){
 
 function go(p){S.page=p;render();window.scrollTo(0,0);}
 render();
-</script>
+</script>// Load real data from API
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', loadRealData);
+} else {
+  loadRealData();
+}
 </body>
 </html>
