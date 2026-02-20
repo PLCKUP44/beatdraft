@@ -34,6 +34,24 @@ app.get('/sync', async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 });
+// Sync endpoint (TEMPORARY - remove after use)
+app.get('/sync', async (req, res) => {
+  try {
+    console.log('🔄 Manual Spotify sync triggered...');
+    const spotifyService = require('./services/spotifyService');
+    await spotifyService.syncAllArtists();
+    res.json({ 
+      success: true, 
+      message: 'Spotify sync completed successfully!'
+    });
+  } catch (error) {
+    console.error('Sync error:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message 
+    });
+  }
+});
 // Cron job: Aggiorna dati Spotify ogni giorno alle 3:00 AM
 cron.schedule('0 3 * * *', async () => {
   console.log('🔄 Running Spotify sync...');
