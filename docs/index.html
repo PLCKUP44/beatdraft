@@ -139,8 +139,11 @@ function convertAPIArtist(artist, index) {
   else if (artist.category === 'Grande') rarity = 'Rare';
   else if (artist.category === 'Emergente') rarity = 'Rare';
   
+  // Use numeric ID directly
+  const numericId = parseInt(artist.id);
+  
   return {
-    cardId: `api-${artist.id}`,
+    cardId: numericId,
     name: artist.name,
     artist: artist.name,
     emoji: artist.emoji || '🎵',
