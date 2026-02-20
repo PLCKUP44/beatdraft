@@ -111,7 +111,7 @@ body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--t);min-he
 
 <script>
 // ============================================
-// API CONFIGURATION & INTEGRATION
+// API BACKEND INTEGRATION
 // ============================================
 const API_URL = 'https://beatdraft-api.onrender.com';
 let API_CACHE = {artists: null, lastFetch: null};
@@ -131,19 +131,33 @@ async function fetchArtists() {
   }
 }
 
-function convertAPIArtist(artist) {
+function convertAPIArtist(artist, index) {
+  // Genera rarità basata su categoria
+  let rarity = 'Common';
+  if (artist.category === 'Leggendario') rarity = 'Platinum';
+  else if (artist.category === 'Mondiale') rarity = 'Epic';
+  else if (artist.category === 'Grande') rarity = 'Rare';
+  else if (artist.category === 'Emergente') rarity = 'Rare';
+  
   return {
     cardId: `api-${artist.id}`,
+    name: artist.name,
     artist: artist.name,
     emoji: artist.emoji || '🎵',
     spotifyId: artist.spotify_id,
+    list: artist.monthly_listeners || artist.current_listeners || 0,
     monthlyListeners: artist.monthly_listeners || artist.current_listeners || 0,
+    role: artist.category || 'Sconosciuto',
     category: artist.category || 'Sconosciuto',
     isLegacy: artist.is_legacy || false,
-    genre: artist.genre || 'Music',
-    popularity: artist.popularity || 50,
-    followers: artist.followers || 0,
-    imageUrl: artist.image_url || ''
+    rarity: rarity,
+    price: Math.floor((artist.monthly_listeners || 1000000) / 50000),
+    score: Math.floor((artist.monthly_listeners || 1000000) / 5000000),
+    wg: Math.random() * 15 + 5, // Mock growth
+    chart: artist.chart_position_it || artist.chart_position_global || null,
+    fol: artist.followers || 0,
+    mint: Math.floor(Math.random() * 500) + 1,
+    total: 1000
   };
 }
 
@@ -152,7 +166,8 @@ async function loadRealData() {
   try {
     const apiArtists = await fetchArtists();
     if (apiArtists && apiArtists.length > 0) {
-      CARDS = apiArtists.map(convertAPIArtist);
+      CARDS = apiArtists.map((a, i) => convertAPIArtist(a, i));
+      BA = CARDS; // Aggiorna anche BA
       console.log(`✅ Loaded ${CARDS.length} artists from API`);
       if (S.page === 'market') render();
     }
@@ -162,11 +177,10 @@ async function loadRealData() {
 }
 
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => setTimeout(loadRealData, 100));
+  document.addEventListener('DOMContentLoaded', () => setTimeout(loadRealData, 200));
 } else {
-  setTimeout(loadRealData, 100);
+  setTimeout(loadRealData, 200);
 }
-
 // ============================================
 
 // ── CONFIGURAZIONE ──────────────────────────────────────────────────────────
