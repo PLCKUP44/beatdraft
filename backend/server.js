@@ -24,7 +24,16 @@ app.use('/api/lineup', require('./routes/lineup'));
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
-
+// Sync endpoint (TEMPORARY)
+app.get('/sync', async (req, res) => {
+  try {
+    const spotifyService = require('./services/spotifyService');
+    await spotifyService.syncAllArtists();
+    res.json({ success: true, message: 'Sync completed!' });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
 // Cron job: Aggiorna dati Spotify ogni giorno alle 3:00 AM
 cron.schedule('0 3 * * *', async () => {
   console.log('🔄 Running Spotify sync...');
