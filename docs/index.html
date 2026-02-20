@@ -137,9 +137,13 @@ function convertAPIArtist(artist) {
     artist: artist.name,
     emoji: artist.emoji || '🎵',
     spotifyId: artist.spotify_id,
-    monthlyListeners: artist.monthly_listeners || 0,
-    category: artist.category,
-    isLegacy: artist.is_legacy || false
+    monthlyListeners: artist.monthly_listeners || artist.current_listeners || 0,
+    category: artist.category || 'Sconosciuto',
+    isLegacy: artist.is_legacy || false,
+    genre: artist.genre || 'Music',
+    popularity: artist.popularity || 50,
+    followers: artist.followers || 0,
+    imageUrl: artist.image_url || ''
   };
 }
 
