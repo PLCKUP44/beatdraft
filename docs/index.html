@@ -142,23 +142,27 @@ function convertAPIArtist(artist, index) {
   // Use numeric ID directly
   const numericId = parseInt(artist.id);
   
+  // Convert strings to numbers!
+  const listeners = parseInt(artist.monthly_listeners || artist.current_listeners || artist.followers || 1000000);
+  const followers = parseInt(artist.followers || 0);
+  
   return {
     cardId: numericId,
     name: artist.name,
     artist: artist.name,
     emoji: artist.emoji || '🎵',
     spotifyId: artist.spotify_id,
-    list: artist.monthly_listeners || artist.current_listeners || 0,
-    monthlyListeners: artist.monthly_listeners || artist.current_listeners || 0,
+    list: listeners,
+    monthlyListeners: listeners,
     role: artist.category || 'Sconosciuto',
     category: artist.category || 'Sconosciuto',
     isLegacy: artist.is_legacy || false,
     rarity: rarity,
-    price: Math.floor((artist.monthly_listeners || 1000000) / 50000),
-    score: Math.floor((artist.monthly_listeners || 1000000) / 5000000),
-    wg: Math.random() * 15 + 5, // Mock growth
+    price: Math.max(10, Math.floor(listeners / 50000)),
+    score: Math.max(5, Math.floor(listeners / 5000000)),
+    wg: Math.floor(Math.random() * 15 + 5),
     chart: artist.chart_position_it || artist.chart_position_global || null,
-    fol: artist.followers || 0,
+    fol: followers,
     mint: Math.floor(Math.random() * 500) + 1,
     total: 1000
   };
