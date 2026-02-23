@@ -53,7 +53,7 @@ app.get('/sync', async (req, res) => {
   }
 });
 // POPULATE DATABASE - 30 artisti (TEMPORARY)
-app.post('/populate-db', async (req, res) => {
+app.get('/populate-db', async (req, res) => {
   try {
     const { pool } = require('./config/database');
     
