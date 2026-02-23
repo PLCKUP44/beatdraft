@@ -52,6 +52,88 @@ app.get('/sync', async (req, res) => {
     });
   }
 });
+// AGGIUNGI AL BACKEND - Test Spotify Auth
+
+app.get('/test-spotify-auth', async (req, res) => {
+  try {
+    const axios = require('axios');
+    
+    // Step 1: Test credenziali
+    const clientId = process.env.SPOTIFY_CLIENT_ID;
+    const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
+    
+    if (!clientId || !clientSecret) {
+      return res.json({
+        success: false,
+        error: 'Missing credentials',
+        hasClientId: !!clientId,
+        hasClientSecret: !!clientSecret
+      });
+    }
+    
+    // Step 2: Prova a ottenere token
+    const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
+    
+    let tokenResponse;
+    try {
+      tokenResponse = await axios.post(
+        'https://accounts.spotify.com/api/token',
+        'grant_type=client_credentials',
+        {
+          headers: {
+            'Authorization': `Basic ${credentials}`,
+            'Content-Type': 'application/x-www-form-urlencoded'
+          }
+        }
+      );
+    } catch (tokenError) {
+      return res.json({
+        success: false,
+        step: 'token_generation',
+        error: tokenError.response?.data || tokenError.message,
+        clientIdPrefix: clientId.substring(0, 10) + '...'
+      });
+    }
+    
+    const token = tokenResponse.data.access_token;
+    
+    // Step 3: Prova a scaricare Taylor Swift
+    let artistResponse;
+    try {
+      artistResponse = await axios.get(
+        'https://api.spotify.com/v1/artists/06HL4z0CvFAxyc27GXpf02',
+        {
+          headers: { 'Authorization': `Bearer ${token}` }
+        }
+      );
+    } catch (artistError) {
+      return res.json({
+        success: false,
+        step: 'artist_fetch',
+        error: artistError.response?.data || artistError.message,
+        tokenWorks: true
+      });
+    }
+    
+    // Success!
+    return res.json({
+      success: true,
+      message: 'Spotify API works perfectly!',
+      artist: {
+        name: artistResponse.data.name,
+        followers: artistResponse.data.followers.total,
+        popularity: artistResponse.data.popularity,
+        image: artistResponse.data.images[0]?.url
+      }
+    });
+    
+  } catch (error) {
+    res.json({
+      success: false,
+      error: error.message
+    });
+  }
+});
 // POPULATE DATABASE - 30 artisti (TEMPORARY)
 app.get('/populate-db', async (req, res) => {
   try {
